@@ -1,0 +1,114 @@
+# ╔══════════════════════════════════════════════════════════════════════════╗
+# ║  BTC MINER SUPREME — Collapse-Theoretic Mining Pipeline Configuration  ║
+# ╚══════════════════════════════════════════════════════════════════════════╝
+
+system:
+  name: "btc-miner-supreme"
+  version: "1.0.0"
+  log_level: "INFO"               # DEBUG | INFO | WARNING | ERROR
+  data_dir: "./data"
+  checkpoint_dir: "./data/checkpoints"
+  replay_db: "./data/replay.db"
+
+# ─── Hardware Topology ───────────────────────────────────────────────────
+hardware:
+  cpu:
+    model: "Intel Xeon Platinum 8593Q"
+    nodes: 2
+    threads_per_node: 128
+  gpu:
+    model: "NVIDIA H100 SXM"
+    count: 10
+    cuda_visible_devices: "0,1,2,3,4,5,6,7,8,9"
+    threads_per_block: 256
+    blocks_per_grid: 1024
+  fpga:
+    model: "Alveo UL3524"
+    count: 40
+    xrt_device_prefix: "/dev/xclmgmt"
+    bitstream_path: "./bitstreams/sha256d_pipeline.xclbin"
+    clock_mhz: 500
+
+# ─── Layer 1: Entropy Shaping & Symbolic Guidance ────────────────────────
+entropy:
+  griffin:
+    attractor_constant: 0.001039501  # 1/962
+    basin_width: 0.0005
+    harmonic_depth: 8
+    seed_mode: "truerandom"         # truerandom | urandom | deterministic
+  zeta:
+    critical_line_re: 0.5
+    imaginary_range: [14.134, 10000.0]   # First zero to sweep bound
+    zero_cache_size: 100000
+    filter_tolerance: 1.0e-6
+  gan:
+    model_path: "./models/qer_gan.pt"
+    latent_dim: 128
+    replay_buffer_size: 1000000
+    train_interval_blocks: 10
+    batch_size: 512
+    learning_rate: 0.0002
+  observer:
+    recursion_depth: 5
+    convergence_threshold: 0.85
+    ladder_width: 32
+    history_window: 500
+  collapse_cone:
+    cone_angle_deg: 15.0
+    merge_strategy: "weighted_vote"   # weighted_vote | intersection | union
+    max_candidates: 67108864          # 2^26
+
+# ─── Layer 2: Execution & Hardware Dispatch ──────────────────────────────
+execution:
+  sha256d:
+    mode: "collapse"                  # collapse | bruteforce | hybrid
+    chunk_size: 16777216              # 2^24 nonces per dispatch unit
+    difficulty_bits: null             # auto-fetched from block template
+  gpu_dispatch:
+    stream_count: 4
+    pinned_memory: true
+    batch_overlap: true
+  fpga_dispatch:
+    pipeline_depth: 16
+    dma_buffer_size_mb: 64
+    timeout_ms: 5000
+
+# ─── Layer 3: Networking, Safety, & Payout ───────────────────────────────
+network:
+  bitcoin_rpc:
+    host: "127.0.0.1"
+    port: 8332
+    user: "rpcuser"
+    password: "rpcpassword"
+    timeout: 30
+    ssl: false
+  stratum:
+    pool_url: "stratum+tcp://pool.example.com:3333"
+    worker_name: "miner_supreme.001"
+    worker_password: "x"
+    backup_pools:
+      - "stratum+tcp://backup1.example.com:3333"
+      - "stratum+tcp://backup2.example.com:3333"
+  submission:
+    fuzzing_enabled: true
+    min_delay_ms: 50
+    max_delay_ms: 500
+    telemetry_jitter: true
+  payout:
+    cold_wallet_address: "bc1qYOUR_COLD_WALLET_ADDRESS_HERE"
+    min_payout_btc: 0.001
+    auto_sweep: true
+    sweep_interval_minutes: 60
+
+# ─── Deployment & Telemetry ──────────────────────────────────────────────
+deployment:
+  auto_tune: true
+  core_balancer:
+    min_entropy_workers: 2
+    max_entropy_workers: null         # null = auto (num_cpus)
+    rebalance_interval_sec: 30
+  monitoring:
+    prometheus_port: 9100
+    grafana_dashboard_uid: "btc-collapse-dynamics"
+    metrics_prefix: "btcminer"
+    export_interval_sec: 5

@@ -1,0 +1,93 @@
+# ╔══════════════════════════════════════════════════════════════════════╗
+# ║  BTC Miner Supreme — Docker Compose                                ║
+# ║  Orchestrates miner, Prometheus, and Grafana services              ║
+# ╚══════════════════════════════════════════════════════════════════════╝
+
+version: "3.9"
+
+x-gpu-resources: &gpu-resources
+  deploy:
+    resources:
+      reservations:
+        devices:
+          - driver: nvidia
+            count: all
+            capabilities: [gpu]
+
+services:
+  # ── Core Miner ───────────────────────────────────────────────────────
+  miner:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: btc-miner-supreme
+    restart: unless-stopped
+    <<: *gpu-resources
+    volumes:
+      - ./config.yaml:/opt/btc-miner/config.yaml:ro
+      - ./data:/opt/btc-miner/data
+      - ./models:/opt/btc-miner/models
+      - ./bitstreams:/opt/btc-miner/bitstreams:ro
+      # XRT device passthrough (uncomment on FPGA hosts)
+      # - /dev/xclmgmt0:/dev/xclmgmt0
+      # - /dev/dri:/dev/dri
+    ports:
+      - "9100:9100"    # Prometheus metrics
+    environment:
+      - CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7,8,9
+      - PYTHONPATH=/opt/btc-miner
+      - NUMBA_CUDA_MAX_PENDING_DEALLOCS_COUNT=50
+    networks:
+      - miner-net
+    depends_on:
+      - prometheus
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+  # ── Prometheus ───────────────────────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: btc-prometheus
+    restart: unless-stopped
+    volumes:
+      - ./deployment/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.retention.time=30d"
+      - "--web.enable-lifecycle"
+    networks:
+      - miner-net
+
+  # ── Grafana ──────────────────────────────────────────────────────────
+  grafana:
+    image: grafana/grafana:10.4.0
+    container_name: btc-grafana
+    restart: unless-stopped
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./deployment/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./deployment/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=supremestack
+      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/var/lib/grafana/dashboards/collapse-dynamics.json
+    networks:
+      - miner-net
+    depends_on:
+      - prometheus
+
+volumes:
+  prometheus-data:
+  grafana-data:
+
+networks:
+  miner-net:
+    driver: bridge

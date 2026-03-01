@@ -1,0 +1,11 @@
+# Prometheus configuration for BTC Miner Supreme
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+
+scrape_configs:
+  - job_name: "btc-miner-supreme"
+    static_configs:
+      - targets: ["miner:9100"]
+        labels:
+          instance: "miner-primary"

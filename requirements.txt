@@ -1,0 +1,36 @@
+# BTC Miner Supreme — Collapse-Theoretic Mining Pipeline
+# Core
+PyYAML>=6.0
+numpy>=1.26
+scipy>=1.12
+requests>=2.31
+aiohttp>=3.9
+
+# Cryptography
+hashlib-additional>=1.0;python_version<"3.0"
+pycryptodome>=3.20
+
+# GPU / CUDA
+numba>=0.59
+cupy-cuda12x>=13.0
+
+# GAN / ML
+torch>=2.2
+torchvision>=0.17
+
+# FPGA (XRT Python bindings)
+pyxrt>=2.16;sys_platform=="linux"
+
+# Networking
+python-bitcoinrpc>=1.0
+websockets>=12.0
+
+# Telemetry
+prometheus-client>=0.20
+psutil>=5.9
+
+# Utilities
+click>=8.1
+rich>=13.7
+structlog>=24.1
+tenacity>=8.2
