@@ -9,7 +9,7 @@ import LiveTerminal from "@/components/LiveTerminal";
 import HeuristicInjector from "@/components/HeuristicInjector";
 
 export default function Dashboard() {
-  const { entropy, hardware, profit, wallet, mining, terminal } = useSimulation();
+  const { entropy, hardware, profit, wallet, mining, terminal, connectionLost } = useSimulation();
 
   if (!hardware) {
     return (
@@ -19,17 +19,46 @@ export default function Dashboard() {
             Ω
           </div>
           <div className="font-mono text-xs text-text-dim mt-2 tracking-widest">
-            INITIALIZING SUPREMACY CORE...
+            CONNECTING TO ORCHESTRATOR...
           </div>
         </div>
       </div>
     );
   }
 
+  // Default mining/profit for Header when data hasn&#39;t arrived yet
+  const headerMining = mining ?? {
+    totalRounds: 0,
+    blocksFound: 0,
+    uptime: 0,
+    currentPhase: "Awaiting Telemetry",
+    stratumConnected: false,
+    lastBlockTime: "N/A",
+  };
+  const headerProfit = profit ?? {
+    btcPrice: 0,
+    dailyRevenueBTC: 0,
+    dailyRevenueUSD: 0,
+    powerCostUSD: 0,
+    netProfitUSD: 0,
+    hashRate: 0,
+    networkDifficulty: 0,
+    networkShare: 0,
+  };
+
   return (
     <div className="min-h-screen bg-bg-primary grid-bg">
+      {/* Connection Lost Banner */}
+      {connectionLost && (
+        <div className="bg-red-900/80 border-b border-red-500 px-4 py-2 text-center">
+          <span className="font-mono text-xs text-red-300 tracking-widest">
+            ⚠ CONNECTION TO ORCHESTRATOR LOST — retrying every 2s...
+          </span>
+        </div>
+      )}
+
       {/* Header */}
-      <Header mining={mining} profit={profit} />
+      <Header mining={headerMining} profit={headerProfit} />
 
       {/* Main Grid Layout */}
       <div className="grid grid-cols-12 gap-3 p-3 h-[calc(100vh-60px)]">

@@ -1,0 +1,12 @@
+{
+    "hollywood_prop_scan": {
+        "exit_code": 0,
+        "total_violations": 0,
+        "violations": []
+    },
+    "agent_reviews": null,
+    "aibom": null,
+    "formal_verification": null,
+    "hardware": null,
+    "database": null
+}

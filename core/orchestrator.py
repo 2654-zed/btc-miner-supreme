@@ -197,10 +197,11 @@ class MasterOrchestrator:
         logger.warning(
             "Draining data queues and halting %s operations …", target_type
         )
-        # In a full production deployment, this would:
+        # Production implementation must:
         #   • Flush in-flight DMA buffers (FPGA)
         #   • Synchronise CUDA streams and free pinned memory (GPU)
         #   • Wait for pending PCIe transactions to complete
         #   • Transition devices to low-power idle state
-        time.sleep(0.05)  # Simulated drain period
-        logger.info("%s hardware bridge idled successfully.", target_type)
+        # NOTE: No simulated delay — real drain is hardware-dependent.
+        #       Wire to actual driver teardown via HardwareBridge.drain().
+        logger.info("%s hardware bridge drain requested (no-op until wired).", target_type)

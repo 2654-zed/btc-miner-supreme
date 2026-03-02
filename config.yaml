@@ -78,14 +78,14 @@ network:
   bitcoin_rpc:
     host: "127.0.0.1"
     port: 8332
-    user: "rpcuser"
-    password: "rpcpassword"
+    user: "${BTC_RPC_USER}"            # set via environment
+    password: "${BTC_RPC_PASSWORD}"  # set via environment
     timeout: 30
     ssl: false
   stratum:
     pool_url: "stratum+tcp://pool.example.com:3333"
     worker_name: "miner_supreme.001"
-    worker_password: "x"
+    worker_password: "${STRATUM_PASSWORD}"  # set via environment
     backup_pools:
       - "stratum+tcp://backup1.example.com:3333"
       - "stratum+tcp://backup2.example.com:3333"
@@ -95,7 +95,7 @@ network:
     max_delay_ms: 500
     telemetry_jitter: true
   payout:
-    cold_wallet_address: "bc1qYOUR_COLD_WALLET_ADDRESS_HERE"
+    cold_wallet_address: "${COLD_WALLET_ADDRESS}"
     min_payout_btc: 0.001
     auto_sweep: true
     sweep_interval_minutes: 60

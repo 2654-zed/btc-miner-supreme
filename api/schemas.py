@@ -90,3 +90,104 @@ class FormulaValidationResponse(BaseModel):
     """Result of AST-only validation (no execution)."""
     valid: bool
     error: Optional[str] = None
+
+
+# ─── Full Telemetry Status ──────────────────────────────────────────────
+
+
+class CPUInfoResponse(BaseModel):
+    model: str
+    cores: int
+    threads: int
+    load: float
+    temp: float
+    frequency: float
+
+
+class GPUNodeResponse(BaseModel):
+    id: int
+    name: str
+    temp: float
+    utilization: float
+    memUsed: float
+    memTotal: float
+    power: float
+    hashRate: float
+    status: str  # "active" | "idle" | "error"
+
+
+class FPGANodeResponse(BaseModel):
+    id: int
+    name: str
+    voltage: float
+    xrtStatus: str  # "connected" | "disconnected" | "error"
+    dmaRate: float
+    hashRate: float
+    temp: float
+    status: str  # "active" | "idle" | "error"
+
+
+class HardwareStateResponse(BaseModel):
+    cpus: list[CPUInfoResponse]
+    gpus: list[GPUNodeResponse]
+    fpgas: list[FPGANodeResponse]
+
+
+class WalletInfoResponse(BaseModel):
+    address: str
+    balance: float
+    pendingRewards: float
+    totalMined: float
+    lastPayout: str
+
+
+class ProfitMetricsResponse(BaseModel):
+    btcPrice: float
+    dailyRevenueBTC: float
+    dailyRevenueUSD: float
+    powerCostUSD: float
+    netProfitUSD: float
+    hashRate: float
+    networkDifficulty: float
+    networkShare: float
+
+
+class MiningStatsResponse(BaseModel):
+    totalRounds: int
+    blocksFound: int
+    uptime: int
+    currentPhase: str
+    stratumConnected: bool
+    lastBlockTime: str
+
+
+class EntropySnapshotResponse(BaseModel):
+    time: str
+    convergenceScore: float
+    griffinBasin: float
+    zetaAlignment: float
+    ganReplay: float
+    observerLadder: float
+    coneSize: int
+    deviation: float
+
+
+class TerminalLineResponse(BaseModel):
+    id: int
+    timestamp: str
+    tag: str
+    message: str
+    level: str  # "info" | "success" | "warning" | "error"
+
+
+class FullStatusResponse(BaseModel):
+    """
+    Complete telemetry payload served by ``GET /api/v1/status``.
+    Maps 1:1 to the TypeScript interfaces in ``dashboard/src/types/index.ts``.
+    """
+    entropy: list[EntropySnapshotResponse]
+    hardware: HardwareStateResponse
+    profit: ProfitMetricsResponse
+    wallet: WalletInfoResponse
+    mining: MiningStatsResponse
+    terminal: list[TerminalLineResponse]

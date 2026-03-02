@@ -1,0 +1,50 @@
+{
+    "hollywood_prop_scan": {
+        "exit_code": 1,
+        "total_violations": 2,
+        "violations": [
+            {
+                "rule_id": "HP-001",
+                "severity": "HIGH",
+                "file": "dashboard/src/hooks/useSimulation.ts",
+                "line": 42,
+                "message": "Math.random() used to generate fake mining telemetry"
+            },
+            {
+                "rule_id": "HP-003",
+                "severity": "CRITICAL",
+                "file": "layer3_network/wallet_payout_automation.py",
+                "line": 18,
+                "message": "Hardcoded wallet address: bc1qFAKE..."
+            }
+        ]
+    },
+    "agent_reviews": {
+        "security_auditor": {
+            "approved": false,
+            "zero_day_found": true,
+            "findings": ["Simulation layer masquerading as real telemetry"]
+        },
+        "architectural_critic": {
+            "approved": false,
+            "findings": ["Hardcoded credentials violate DI contract"]
+        }
+    },
+    "aibom": {
+        "metadata": {
+            "slsa_level": "1"
+        },
+        "provenance": {
+            "model": {
+                "name": "Unknown Model"
+            }
+        },
+        "integrity": {
+            "artifact_count": 0
+        }
+    },
+    "formal_verification": {
+        "proof_generated": false,
+        "correctness_score": 0.42
+    }
+}

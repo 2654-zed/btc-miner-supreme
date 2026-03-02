@@ -29,8 +29,8 @@ logger = logging.getLogger(__name__)
 @dataclass
 class RPCConfig:
     rpc_url: str = "http://127.0.0.1:8332"
-    rpc_user: str = "rpcuser"
-    rpc_password: str = "rpcpassword"
+    rpc_user: str = ""      # REQUIRED — set via config.yaml or BTC_RPC_USER env
+    rpc_password: str = ""  # REQUIRED — set via config.yaml or BTC_RPC_PASSWORD env
     timeout: int = 30
     max_retries: int = 3
     retry_backoff: float = 1.0
@@ -44,8 +44,8 @@ class BTCMainnetConnector:
     def __init__(
         self,
         rpc_url: str = "http://127.0.0.1:8332",
-        rpc_user: str = "rpcuser",
-        rpc_password: str = "rpcpassword",
+        rpc_user: str = "",
+        rpc_password: str = "",
         timeout: int = 30,
     ) -> None:
         self.url = rpc_url

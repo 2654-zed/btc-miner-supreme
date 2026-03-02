@@ -1,0 +1,59 @@
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║  Pre-commit hooks — Architectural Governance Pipeline          ║
+# ║  Install: pip install pre-commit && pre-commit install         ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
+repos:
+  # ─── Hollywood Prop Scanner ────────────────────────────────────
+  - repo: local
+    hooks:
+      - id: hollywood-prop-scan
+        name: "Hollywood Prop Anti-Pattern Scanner"
+        entry: python governance/hollywood_prop_scanner.py --strict
+        language: python
+        types: [file]
+        pass_filenames: false
+        always_run: true
+        stages: [pre-commit]
+
+  # ─── Secrets Detection ─────────────────────────────────────────
+  - repo: local
+    hooks:
+      - id: no-hardcoded-wallets
+        name: "Block hardcoded wallet addresses"
+        entry: "(?i)bc1q[a-z0-9]{20,}"
+        language: pygrep
+        types: [text]
+        exclude: >
+          (?x)(
+            \.env\.example|
+            config\.yaml|
+            test_.*\.py|
+            \.next/
+          )
+
+      - id: no-hardcoded-passwords
+        name: "Block hardcoded passwords in source"
+        entry: '(?i)(password|secret|api_key)\s*[:=]\s*["\x27][a-zA-Z0-9!@#$%^&*]{4,}["\x27]'
+        language: pygrep
+        types: [text]
+        exclude: >
+          (?x)(
+            \.env\.example|
+            requirements\.txt|
+            package-lock\.json|
+            \.next/|
+            node_modules/
+          )
+
+  # ─── Python Linting ────────────────────────────────────────────
+  - repo: local
+    hooks:
+      - id: python-tests
+        name: "Run IoC architecture tests"
+        entry: python -m pytest tests/test_ioc_architecture.py -q --tb=short
+        language: python
+        types: [python]
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]

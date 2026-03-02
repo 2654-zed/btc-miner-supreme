@@ -45,7 +45,7 @@ class StratumJob:
 class StratumConfig:
     pool_url: str = "stratum+tcp://pool.example.com:3333"
     worker: str = "miner_supreme.001"
-    password: str = "x"
+    password: str = ""  # REQUIRED — set via config.yaml or STRATUM_PASSWORD env
     backup_pools: List[str] = field(default_factory=list)
     connect_timeout: int = 15
     read_timeout: int = 60
@@ -62,7 +62,7 @@ class StratumSubmitter:
         self,
         pool_url: str = "stratum+tcp://pool.example.com:3333",
         worker: str = "miner_supreme.001",
-        password: str = "x",
+        password: str = "",
         backup_pools: Optional[List[str]] = None,
     ) -> None:
         self.pool_url = pool_url

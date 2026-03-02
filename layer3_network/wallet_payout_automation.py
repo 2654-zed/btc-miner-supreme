@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class PayoutConfig:
-    cold_wallet_address: str = "bc1qYOUR_COLD_WALLET_ADDRESS_HERE"
+    cold_wallet_address: str = ""  # REQUIRED — set via config.yaml or environment
     min_payout_btc: float = 0.001
     auto_sweep: bool = True
     sweep_interval_minutes: int = 60
@@ -58,7 +58,7 @@ class WalletPayoutAutomation:
 
     def __init__(
         self,
-        wallet_address: str = "bc1qYOUR_COLD_WALLET_ADDRESS_HERE",
+        wallet_address: str = "",
         min_payout: float = 0.001,
         connector=None,             # BTCMainnetConnector
         sweep_interval_min: int = 60,

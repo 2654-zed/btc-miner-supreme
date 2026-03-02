@@ -4,8 +4,26 @@ import { motion } from "framer-motion";
 import type { ProfitMetrics, WalletInfo } from "@/types";
 
 interface ProfitabilityWalletProps {
-  profit: ProfitMetrics;
-  wallet: WalletInfo;
+  profit: ProfitMetrics | null;
+  wallet: WalletInfo | null;
+}
+
+// ─── Skeleton / Loading State ───
+function TelemetrySkeleton() {
+  return (
+    <div className="panel">
+      <div className="panel-header">⟐ Initializing Telemetry...</div>
+      <div className="p-6 flex flex-col items-center gap-4">
+        <div className="w-36 h-[72px] bg-bg-primary rounded animate-pulse" />
+        <div className="grid grid-cols-2 gap-3 w-full">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="h-4 bg-bg-primary rounded animate-pulse" />
+          ))}
+        </div>
+        <div className="w-full h-12 bg-bg-primary rounded animate-pulse mt-2" />
+      </div>
+    </div>
+  );
 }
 
 // ─── Gauge Arc ───
@@ -60,6 +78,11 @@ function obfuscateAddress(addr: string): string {
 }
 
 export default function ProfitabilityWallet({ profit, wallet }: ProfitabilityWalletProps) {
+  // Graceful loading state while awaiting first network fetch
+  if (!profit || !wallet) {
+    return <TelemetrySkeleton />;
+  }
+
   return (
     <div className="space-y-3">
       {/* Profit Gauge */}

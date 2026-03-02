@@ -44,7 +44,7 @@ const BATCH_PRESETS = [
   { label: "50M", value: 50_000_000 },
 ];
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000";
 
 // ─── Component ─────────────────────────────────────────────────────────
 
