@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import logging
 import os
-import random
+import secrets
 import time
 import threading
 from dataclasses import dataclass
@@ -78,12 +78,14 @@ class BlockSubmissionFuzzer:
 
     # ── Fuzzing helpers ──────────────────────────────────────────────────
     def _random_delay(self) -> float:
-        """Return a random delay in seconds."""
-        return random.uniform(self.min_delay, self.max_delay)
+        """Return a cryptographically random delay in seconds."""
+        # secrets module — not predictable like Mersenne Twister
+        range_ms = self.max_delay - self.min_delay
+        return self.min_delay + (secrets.randbelow(int(range_ms * 1000)) / 1000.0)
 
     def _fuzz_user_agent(self) -> str:
-        """Pick a random user-agent string."""
-        return random.choice(_USER_AGENTS)
+        """Pick a cryptographically random user-agent string."""
+        return _USER_AGENTS[secrets.randbelow(len(_USER_AGENTS))]
 
     def _fuzz_telemetry(self) -> dict:
         """Generate randomised telemetry metadata."""

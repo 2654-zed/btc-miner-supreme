@@ -14,33 +14,33 @@ export interface EntropySnapshot {
 export interface GPUNode {
   id: number;
   name: string;
-  temp: number;
-  utilization: number;
-  memUsed: number;
-  memTotal: number;
-  power: number;
-  hashRate: number;
-  status: "active" | "idle" | "error";
+  temp: number | null;
+  utilization: number | null;
+  memUsed: number | null;
+  memTotal: number | null;
+  power: number | null;
+  hashRate: number | null;
+  status: "active" | "idle" | "unavailable";
 }
 
 export interface FPGANode {
   id: number;
   name: string;
-  voltage: number;
-  xrtStatus: "connected" | "disconnected" | "error";
-  dmaRate: number;
-  hashRate: number;
-  temp: number;
-  status: "active" | "idle" | "error";
+  voltage: number | null;
+  xrtStatus: "connected" | "disconnected" | "unavailable";
+  dmaRate: number | null;
+  hashRate: number | null;
+  temp: number | null;
+  status: "active" | "idle" | "unavailable";
 }
 
 export interface CPUInfo {
   model: string;
   cores: number;
   threads: number;
-  load: number;
-  temp: number;
-  frequency: number;
+  load: number | null;
+  temp: number | null;
+  frequency: number | null;
 }
 
 export interface HardwareState {
@@ -50,22 +50,22 @@ export interface HardwareState {
 }
 
 export interface WalletInfo {
-  address: string;
-  balance: number;
-  pendingRewards: number;
-  totalMined: number;
-  lastPayout: string;
+  address: string | null;
+  balance: number | null;
+  pendingRewards: number | null;
+  totalMined: number | null;
+  lastPayout: string | null;
 }
 
 export interface ProfitMetrics {
-  btcPrice: number;
-  dailyRevenueBTC: number;
-  dailyRevenueUSD: number;
-  powerCostUSD: number;
-  netProfitUSD: number;
-  hashRate: number;
-  networkDifficulty: number;
-  networkShare: number;
+  btcPrice: number | null;
+  dailyRevenueBTC: number | null;
+  dailyRevenueUSD: number | null;
+  powerCostUSD: number | null;
+  netProfitUSD: number | null;
+  hashRate: number | null;
+  networkDifficulty: number | null;
+  networkShare: number | null;
 }
 
 export interface MiningStats {
@@ -74,7 +74,7 @@ export interface MiningStats {
   uptime: number;
   currentPhase: string;
   stratumConnected: boolean;
-  lastBlockTime: string;
+  lastBlockTime: string | null;
 }
 
 export interface TerminalLine {

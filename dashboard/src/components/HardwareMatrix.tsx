@@ -67,17 +67,17 @@ function CPUCard({ cpu, index }: { cpu: CPUInfo; index: number }) {
       <div className="grid grid-cols-3 gap-2 text-center">
         <div>
           <div className="font-mono text-[8px] text-text-dim">LOAD</div>
-          <div className="font-mono text-xs text-neon-green">{cpu.load.toFixed(0)}%</div>
-          <UtilBar value={cpu.load} />
+          <div className="font-mono text-xs text-neon-green">{cpu.load != null ? `${cpu.load.toFixed(0)}%` : 'N/A'}</div>
+          <UtilBar value={cpu.load ?? 0} />
         </div>
         <div>
           <div className="font-mono text-[8px] text-text-dim">TEMP</div>
-          <div className="font-mono text-xs text-neon-orange">{cpu.temp.toFixed(0)}°C</div>
-          <TempBar temp={cpu.temp} />
+          <div className="font-mono text-xs text-neon-orange">{cpu.temp != null ? `${cpu.temp.toFixed(0)}°C` : 'N/A'}</div>
+          <TempBar temp={cpu.temp ?? 0} />
         </div>
         <div>
           <div className="font-mono text-[8px] text-text-dim">FREQ</div>
-          <div className="font-mono text-xs text-neon-cyan">{cpu.frequency.toFixed(1)}GHz</div>
+          <div className="font-mono text-xs text-neon-cyan">{cpu.frequency != null ? `${cpu.frequency.toFixed(1)}GHz` : 'N/A'}</div>
         </div>
       </div>
       <div className="mt-1 font-mono text-[8px] text-text-dim text-center">
@@ -103,30 +103,30 @@ function GPUCard({ gpu }: { gpu: GPUNode }) {
           <StatusDot status={gpu.status} />
           <span className="font-mono text-[9px] text-neon-green">{gpu.name}</span>
         </div>
-        <span className="font-mono text-[9px] text-text-dim">{gpu.hashRate.toFixed(0)} MH/s</span>
+        <span className="font-mono text-[9px] text-text-dim">{gpu.hashRate != null ? `${gpu.hashRate.toFixed(0)} MH/s` : 'N/A'}</span>
       </div>
 
       <div className="grid grid-cols-4 gap-1 text-center">
         <div>
           <div className="font-mono text-[7px] text-text-dim">TEMP</div>
-          <div className="font-mono text-[10px] text-neon-orange">{gpu.temp.toFixed(0)}°</div>
+          <div className="font-mono text-[10px] text-neon-orange">{gpu.temp != null ? `${gpu.temp.toFixed(0)}°` : '-'}</div>
         </div>
         <div>
           <div className="font-mono text-[7px] text-text-dim">UTIL</div>
-          <div className="font-mono text-[10px] text-neon-green">{gpu.utilization.toFixed(0)}%</div>
+          <div className="font-mono text-[10px] text-neon-green">{gpu.utilization != null ? `${gpu.utilization.toFixed(0)}%` : '-'}</div>
         </div>
         <div>
           <div className="font-mono text-[7px] text-text-dim">MEM</div>
-          <div className="font-mono text-[10px] text-neon-cyan">{gpu.memUsed.toFixed(0)}G</div>
+          <div className="font-mono text-[10px] text-neon-cyan">{gpu.memUsed != null ? `${gpu.memUsed.toFixed(0)}G` : '-'}</div>
         </div>
         <div>
           <div className="font-mono text-[7px] text-text-dim">PWR</div>
-          <div className="font-mono text-[10px] text-neon-purple">{gpu.power.toFixed(0)}W</div>
+          <div className="font-mono text-[10px] text-neon-purple">{gpu.power != null ? `${gpu.power.toFixed(0)}W` : '-'}</div>
         </div>
       </div>
 
       <div className="mt-1">
-        <UtilBar value={gpu.utilization} />
+        <UtilBar value={gpu.utilization ?? 0} />
       </div>
 
       {/* Hover detail */}
@@ -137,9 +137,9 @@ function GPUCard({ gpu }: { gpu: GPUNode }) {
           className="mt-2 pt-2 border-t border-border-dim"
         >
           <div className="font-mono text-[8px] text-text-dim space-y-0.5">
-            <div>Numba CUDA: active</div>
-            <div>VRAM: {gpu.memUsed.toFixed(1)} / {gpu.memTotal} GB</div>
-            <div>Power draw: {gpu.power.toFixed(0)} W</div>
+            <div>Numba CUDA: {gpu.status === 'active' ? 'active' : 'inactive'}</div>
+            <div>VRAM: {gpu.memUsed != null ? gpu.memUsed.toFixed(1) : '?'} / {gpu.memTotal != null ? gpu.memTotal.toFixed(0) : '?'} GB</div>
+            <div>Power draw: {gpu.power != null ? `${gpu.power.toFixed(0)} W` : 'N/A'}</div>
           </div>
         </motion.div>
       )}
@@ -166,7 +166,7 @@ function FPGAMiniCard({ fpga }: { fpga: FPGANode }) {
           <StatusDot status={fpga.xrtStatus} />
           <span className="font-mono text-[7px] text-text-dim">{fpga.name}</span>
         </div>
-        <span className="font-mono text-[7px] text-neon-cyan">{fpga.hashRate.toFixed(0)}</span>
+        <span className="font-mono text-[7px] text-neon-cyan">{fpga.hashRate != null ? fpga.hashRate.toFixed(0) : '-'}</span>
       </div>
 
       {hovered && (
@@ -175,8 +175,8 @@ function FPGAMiniCard({ fpga }: { fpga: FPGANode }) {
           animate={{ opacity: 1 }}
           className="mt-1 font-mono text-[7px] text-text-dim space-y-0.5"
         >
-          <div>XRT: {fpga.xrtStatus} | V: {fpga.voltage.toFixed(3)}V</div>
-          <div>DMA: {fpga.dmaRate.toFixed(1)} GB/s | T: {fpga.temp.toFixed(0)}°C</div>
+          <div>XRT: {fpga.xrtStatus} | V: {fpga.voltage != null ? `${fpga.voltage.toFixed(3)}V` : 'N/A'}</div>
+          <div>DMA: {fpga.dmaRate != null ? `${fpga.dmaRate.toFixed(1)} GB/s` : 'N/A'} | T: {fpga.temp != null ? `${fpga.temp.toFixed(0)}°C` : 'N/A'}</div>
         </motion.div>
       )}
     </motion.div>
@@ -185,11 +185,14 @@ function FPGAMiniCard({ fpga }: { fpga: FPGANode }) {
 
 // ─── Main Component ───
 export default function HardwareMatrix({ hardware }: HardwareMatrixProps) {
-  const totalGpuHash = hardware.gpus.reduce((s, g) => s + g.hashRate, 0);
-  const totalFpgaHash = hardware.fpgas.reduce((s, f) => s + f.hashRate, 0);
+  const totalGpuHash = hardware.gpus.reduce((s, g) => s + (g.hashRate ?? 0), 0);
+  const totalFpgaHash = hardware.fpgas.reduce((s, f) => s + (f.hashRate ?? 0), 0);
   const activeGpus = hardware.gpus.filter((g) => g.status === "active").length;
   const activeFpgas = hardware.fpgas.filter((f) => f.status === "active").length;
-  const avgGpuTemp = hardware.gpus.reduce((s, g) => s + g.temp, 0) / hardware.gpus.length;
+  const gpusWithTemp = hardware.gpus.filter((g) => g.temp != null);
+  const avgGpuTemp = gpusWithTemp.length > 0
+    ? gpusWithTemp.reduce((s, g) => s + (g.temp ?? 0), 0) / gpusWithTemp.length
+    : null;
 
   return (
     <div className="space-y-3">
@@ -201,9 +204,9 @@ export default function HardwareMatrix({ hardware }: HardwareMatrixProps) {
         <div className="grid grid-cols-5 gap-3 text-center mt-1">
           <SummaryItem label="GPU HASH" value={`${(totalGpuHash / 1000).toFixed(2)} GH/s`} color="text-neon-green" />
           <SummaryItem label="FPGA HASH" value={`${(totalFpgaHash).toFixed(0)} MH/s`} color="text-neon-cyan" />
-          <SummaryItem label="GPU ACTIVE" value={`${activeGpus}/10`} color="text-neon-green" />
-          <SummaryItem label="FPGA ACTIVE" value={`${activeFpgas}/40`} color="text-neon-cyan" />
-          <SummaryItem label="AVG GPU TEMP" value={`${avgGpuTemp.toFixed(1)}°C`} color="text-neon-orange" />
+          <SummaryItem label="GPU ACTIVE" value={`${activeGpus}/${hardware.gpus.length}`} color="text-neon-green" />
+          <SummaryItem label="FPGA ACTIVE" value={`${activeFpgas}/${hardware.fpgas.length}`} color="text-neon-cyan" />
+          <SummaryItem label="AVG GPU TEMP" value={avgGpuTemp != null ? `${avgGpuTemp.toFixed(1)}°C` : "N/A"} color="text-neon-orange" />
         </div>
       </div>
 
@@ -217,7 +220,7 @@ export default function HardwareMatrix({ hardware }: HardwareMatrixProps) {
       {/* GPUs - 2x5 grid */}
       <div>
         <div className="font-mono text-[9px] text-text-dim tracking-widest mb-1.5 px-1">
-          NVIDIA H100-SXM5 × 10
+          {hardware.gpus.length > 0 ? `${hardware.gpus[0].name.split(':')[0]} × ${hardware.gpus.length}` : 'NO GPUs DETECTED'}
         </div>
         <div className="grid grid-cols-2 gap-2">
           {hardware.gpus.map((gpu) => (
@@ -229,7 +232,7 @@ export default function HardwareMatrix({ hardware }: HardwareMatrixProps) {
       {/* FPGAs - 8x5 grid */}
       <div>
         <div className="font-mono text-[9px] text-text-dim tracking-widest mb-1.5 px-1">
-          XILINX ALVEO UL3524 × 40
+          {hardware.fpgas.length > 0 ? `${hardware.fpgas[0].name.split(':')[0]} × ${hardware.fpgas.length}` : 'NO FPGAs DETECTED'}
         </div>
         <div className="grid grid-cols-5 gap-1">
           {hardware.fpgas.map((fpga) => (

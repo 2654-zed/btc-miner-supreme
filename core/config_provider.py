@@ -205,18 +205,38 @@ class ConfigProvider:
         return self._raw.get("network", {}).get("payout", {})
 
     def _validate(self) -> None:
-        """Fail-fast validation of critical config fields."""
+        """Fail-fast validation of critical config fields.
+
+        Raises ``ConfigurationError`` for missing/unresolved critical values.
+        Warnings-only mode is an anti-pattern — this is hard-fail.
+        """
+        errors: list[str] = []
+
         wallet = self._payout.get("cold_wallet_address", "")
         if not wallet or wallet.startswith("${"):
-            logger.warning(
-                "Wallet address is unresolved ('%s'). "
-                "Set COLD_WALLET_ADDRESS in your .env file.",
-                wallet,
+            errors.append(
+                f"Wallet address is unresolved ('{wallet}'). "
+                "Set COLD_WALLET_ADDRESS in your .env file."
             )
 
         rpc = self._raw.get("network", {}).get("bitcoin_rpc", {})
         if not rpc.get("user") or not rpc.get("password"):
-            logger.warning(
+            errors.append(
                 "Bitcoin RPC credentials are empty. "
                 "Set BTC_RPC_USER and BTC_RPC_PASSWORD in your .env file."
+            )
+
+        stratum = self._raw.get("network", {}).get("stratum", {})
+        pool_url = stratum.get("pool_url", "")
+        if not pool_url or "example.com" in pool_url or pool_url.startswith("${"):
+            errors.append(
+                f"Stratum pool URL is invalid ('{pool_url}'). "
+                "Set a real pool URL in config.yaml or via STRATUM_POOL_URL."
+            )
+
+        if errors:
+            for e in errors:
+                logger.error("CONFIG VALIDATION FAILED: %s", e)
+            raise ConfigurationError(
+                f"{len(errors)} critical config error(s): {'; '.join(errors)}"
             )

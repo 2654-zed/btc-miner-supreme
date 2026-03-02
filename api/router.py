@@ -46,6 +46,7 @@ from api.schemas import (
 from core.config_provider import ConfigProvider, ConfigurationError
 from core.exceptions import HardwareRoutingError, SecurityViolationError
 from core.orchestrator import MasterOrchestrator
+from core.telemetry_provider import TelemetryProvider
 from infrastructure.strategies.cpu_dynamic import DynamicCPUStrategy
 
 logger = logging.getLogger(__name__)
@@ -92,7 +93,7 @@ app.add_middleware(
     allow_origins=_cors_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE"],
-    allow_headers=["*"],
+    allow_headers=["Content-Type", "Accept", "Authorization"],
 )
 
 
@@ -197,96 +198,122 @@ async def orchestrator_status():
 
 # ─── Full Telemetry Status (ConfigProvider-sourced) ────────────────────
 
-# In-memory boot timestamp for uptime tracking
-_BOOT_TIME = time.time()
-
 # Monotonic counter for terminal line IDs
 _terminal_line_id = 0
 
 # Singleton ConfigProvider — injected, not hardcoded
 _config_provider: ConfigProvider | None = None
+# Singleton TelemetryProvider — real hardware metrics
+_telemetry_provider: TelemetryProvider | None = None
 
 
 def _get_config() -> ConfigProvider:
-    """Lazy-initialise the ConfigProvider singleton."""
+    """Lazy-initialise the ConfigProvider singleton.
+
+    Raises ``ConfigurationError`` if env vars are not set.
+    There is NO silent fallback — fail-fast is enforced.
+    """
     global _config_provider
     if _config_provider is None:
-        try:
-            _config_provider = ConfigProvider()
-        except ConfigurationError as exc:
-            logger.warning("ConfigProvider init failed: %s — using raw YAML fallback", exc)
-            _config_provider = ConfigProvider.__new__(ConfigProvider)
-            # Minimal fallback: load raw YAML without env resolution
-            config_path = Path(__file__).resolve().parent.parent / "config.yaml"
-            with open(config_path, "r", encoding="utf-8") as f:
-                _config_provider._raw = yaml.safe_load(f) or {}
-            _config_provider._path = config_path
+        _config_provider = ConfigProvider()
     return _config_provider
 
 
-def _build_hardware_state(cfg: dict) -> dict:
-    """Construct HardwareState from config.yaml hardware topology."""
-    hw = cfg.get("hardware", {})
-    cpu_cfg = hw.get("cpu", {})
-    gpu_cfg = hw.get("gpu", {})
-    fpga_cfg = hw.get("fpga", {})
+def _get_telemetry() -> TelemetryProvider:
+    """Lazy-initialise the TelemetryProvider singleton."""
+    global _telemetry_provider
+    if _telemetry_provider is None:
+        _telemetry_provider = TelemetryProvider()
+    return _telemetry_provider
 
-    cpus = []
-    for i in range(cpu_cfg.get("nodes", 2)):
-        cpus.append({
-            "model": cpu_cfg.get("model", "Unknown CPU"),
-            "cores": cpu_cfg.get("threads_per_node", 128) // 2,
-            "threads": cpu_cfg.get("threads_per_node", 128),
-            "load": 0.0,
-            "temp": 0.0,
-            "frequency": 0.0,
-        })
 
-    gpus = []
-    for i in range(gpu_cfg.get("count", 0)):
-        gpus.append({
-            "id": i,
-            "name": f"{gpu_cfg.get('model', 'GPU')}:{i}",
-            "temp": 0.0,
-            "utilization": 0.0,
-            "memUsed": 0.0,
-            "memTotal": 80.0,
-            "power": 0.0,
-            "hashRate": 0.0,
-            "status": "idle",
-        })
+def _build_hardware_state() -> dict:
+    """Probe REAL hardware via TelemetryProvider.
 
-    fpgas = []
-    for i in range(fpga_cfg.get("count", 0)):
-        fpgas.append({
-            "id": i,
-            "name": f"{fpga_cfg.get('model', 'FPGA')}:{i}",
-            "voltage": 0.0,
-            "xrtStatus": "disconnected",
-            "dmaRate": 0.0,
-            "hashRate": 0.0,
-            "temp": 0.0,
-            "status": "idle",
-        })
+    Returns only devices that actually exist on the host.
+    Metrics are measured, never fabricated.
+    """
+    tp = _get_telemetry()
+    snap = tp.collect()
+
+    cpus = [
+        {
+            "model": c.model,
+            "cores": c.cores,
+            "threads": c.threads,
+            "load": c.load,       # None if psutil unavailable
+            "temp": c.temp,       # None if sensor unavailable
+            "frequency": c.frequency,
+        }
+        for c in snap.cpus
+    ]
+
+    gpus = [
+        {
+            "id": g.id,
+            "name": g.name,
+            "temp": g.temp,
+            "utilization": g.utilization,
+            "memUsed": g.mem_used,
+            "memTotal": g.mem_total,  # QUERIED from pynvml, never hardcoded
+            "power": g.power,
+            "hashRate": g.hash_rate,
+            "status": g.status,
+        }
+        for g in snap.gpus
+    ]
+
+    fpgas = [
+        {
+            "id": f.id,
+            "name": f.name,
+            "voltage": f.voltage,
+            "xrtStatus": f.xrt_status,
+            "dmaRate": f.dma_rate,
+            "hashRate": f.hash_rate,
+            "temp": f.temp,
+            "status": f.status,
+        }
+        for f in snap.fpgas
+    ]
 
     return {"cpus": cpus, "gpus": gpus, "fpgas": fpgas}
 
 
-def _build_terminal_lines(cfg: dict) -> list[dict]:
-    """Generate a few initial terminal boot lines."""
+def _build_terminal_lines() -> list[dict]:
+    """Generate terminal boot lines from REAL config state."""
     global _terminal_line_id
     now = time.strftime("%H:%M:%S", time.localtime())
-    config_path = _get_config()._path if _config_provider else "config.yaml"
+
     lines = []
-    boot_msgs = [
-        ("System", f"ΩINTELLIGENCE™ v{cfg.get('system', {}).get('version', '1.0.0')} booting"),
-        ("Config", f"config.yaml loaded — {config_path}"),
-        ("Hardware", f"CPU: {cfg.get('hardware', {}).get('cpu', {}).get('model', '?')} × {cfg.get('hardware', {}).get('cpu', {}).get('nodes', 0)}"),
-        ("Hardware", f"GPU: {cfg.get('hardware', {}).get('gpu', {}).get('model', '?')} × {cfg.get('hardware', {}).get('gpu', {}).get('count', 0)}"),
-        ("Hardware", f"FPGA: {cfg.get('hardware', {}).get('fpga', {}).get('model', '?')} × {cfg.get('hardware', {}).get('fpga', {}).get('count', 0)}"),
-        ("Stratum", f"Connecting to {cfg.get('network', {}).get('stratum', {}).get('pool_url', 'N/A')}"),
-        ("Wallet", f"Cold wallet configured — payout ≥ {cfg.get('network', {}).get('payout', {}).get('min_payout_btc', 0)} BTC"),
-    ]
+    boot_msgs: list[tuple[str, str]] = []
+
+    try:
+        cfg_prov = _get_config()
+        topo = cfg_prov.hardware_topology
+        stratum = cfg_prov.stratum_config
+        payout = cfg_prov.payout_config
+        boot_msgs = [
+            ("System", f"ΩINTELLIGENCE™ v{cfg_prov.raw.get('system', {}).get('version', '?')} booting"),
+            ("Config", f"config.yaml loaded — {cfg_prov._path}"),
+            ("Hardware", f"CPU: {topo.cpu_model} × {topo.cpu_nodes} (config claim — verify with probe)"),
+            ("Hardware", f"GPU: {topo.gpu_model} × {topo.gpu_count} (config claim)"),
+            ("Hardware", f"FPGA: {topo.fpga_model} × {topo.fpga_count} (config claim)"),
+            ("Stratum", f"Pool: {stratum.pool_url}"),
+            ("Wallet", f"Payout threshold: ≥ {payout.min_payout_btc} BTC"),
+        ]
+    except ConfigurationError as exc:
+        boot_msgs = [
+            ("System", "ΩINTELLIGENCE™ booting — CONFIG ERROR"),
+            ("Error", f"ConfigProvider failed: {exc}"),
+            ("Error", "Set required env vars (see .env.example) and restart."),
+        ]
+
+    # Add real hardware probe summary
+    tp = _get_telemetry()
+    snap = tp.collect()
+    boot_msgs.append(("Probe", f"Detected: {len(snap.cpus)} CPU(s), {len(snap.gpus)} GPU(s), {len(snap.fpgas)} FPGA(s)"))
+
     for tag, msg in boot_msgs:
         _terminal_line_id += 1
         lines.append({
@@ -294,7 +321,7 @@ def _build_terminal_lines(cfg: dict) -> list[dict]:
             "timestamp": now,
             "tag": tag,
             "message": msg,
-            "level": "info",
+            "level": "error" if tag == "Error" else "info",
         })
     return lines
 
@@ -302,24 +329,23 @@ def _build_terminal_lines(cfg: dict) -> list[dict]:
 @app.get(
     "/api/v1/status",
     response_model=FullStatusResponse,
-    summary="Full dashboard telemetry — single source of truth from config.yaml",
+    summary="Full dashboard telemetry — hardware-probed, never fabricated",
 )
 async def full_status():
     """
     Returns the complete telemetry payload consumed by the React dashboard.
 
-    * Wallet address is **always** parsed from ``config.yaml →
-      network.payout.cold_wallet_address``.
-    * Hardware topology is derived from config.
-    * Live metrics default to zero until real telemetry services
-      are wired in.
+    Contract
+    ────────
+    • Hardware metrics are PROBED from psutil / pynvml / XRT.
+    • Financial metrics are ``None`` until a price feed is wired.
+    • Mining stats come from the orchestrator — not fabricated.
+    • If a data source is unavailable, the field is ``None``, NEVER zero.
     """
-    cfg = _get_config().raw
-    wallet_address = cfg.get("network", {}).get("payout", {}).get("cold_wallet_address", "")
+    tp = _get_telemetry()
+    miner = tp._miner_telemetry
 
-    uptime_seconds = int(time.time() - _BOOT_TIME)
-
-    # Orchestrator diagnostics (may already be running)
+    # Orchestrator diagnostics
     try:
         orch_diag = _get_orchestrator().get_diagnostics()
         is_running = orch_diag["is_running"]
@@ -328,33 +354,42 @@ async def full_status():
         is_running = False
         total_batches = 0
 
+    # Wallet address from config (fail-fast if not configured)
+    try:
+        wallet_address = _get_config().wallet_address
+    except ConfigurationError:
+        wallet_address = None
+
     return FullStatusResponse(
-        entropy=[],
-        hardware=_build_hardware_state(cfg),
+        entropy=[],  # Populated when entropy pipeline is wired
+        hardware=_build_hardware_state(),
         profit={
-            "btcPrice": 0.0,
-            "dailyRevenueBTC": 0.0,
-            "dailyRevenueUSD": 0.0,
-            "powerCostUSD": 0.0,
-            "netProfitUSD": 0.0,
-            "hashRate": 0.0,
-            "networkDifficulty": 0.0,
-            "networkShare": 0.0,
+            # None = "not yet wired" — dashboard renders N/A, not fake $0
+            "btcPrice": None,
+            "dailyRevenueBTC": None,
+            "dailyRevenueUSD": None,
+            "powerCostUSD": None,
+            "netProfitUSD": None,
+            "hashRate": miner.aggregate_hash_rate if miner.aggregate_hash_rate > 0 else None,
+            "networkDifficulty": None,
+            "networkShare": None,
         },
         wallet={
             "address": wallet_address,
-            "balance": 0.0,
-            "pendingRewards": 0.0,
-            "totalMined": 0.0,
-            "lastPayout": "N/A",
+            "balance": None,           # Requires blockchain query
+            "pendingRewards": None,    # Requires pool API
+            "totalMined": None,        # Requires ledger
+            "lastPayout": None,
         },
         mining={
-            "totalRounds": total_batches,
-            "blocksFound": 0,
-            "uptime": uptime_seconds,
-            "currentPhase": "Awaiting Telemetry" if not is_running else "Active",
-            "stratumConnected": False,
-            "lastBlockTime": "N/A",
+            "totalRounds": total_batches + miner.total_rounds,
+            "blocksFound": miner.blocks_found,
+            "uptime": tp.uptime_seconds,
+            "currentPhase": miner.current_phase if miner.current_phase != "Offline" else (
+                "Active" if is_running else "Idle"
+            ),
+            "stratumConnected": miner.stratum_connected,
+            "lastBlockTime": miner.last_block_time,
         },
-        terminal=_build_terminal_lines(cfg),
+        terminal=_build_terminal_lines(),
     )

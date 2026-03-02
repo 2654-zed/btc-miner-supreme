@@ -99,32 +99,32 @@ class CPUInfoResponse(BaseModel):
     model: str
     cores: int
     threads: int
-    load: float
-    temp: float
-    frequency: float
+    load: Optional[float] = None       # None if psutil unavailable
+    temp: Optional[float] = None       # None if sensor unavailable
+    frequency: Optional[float] = None
 
 
 class GPUNodeResponse(BaseModel):
     id: int
     name: str
-    temp: float
-    utilization: float
-    memUsed: float
-    memTotal: float
-    power: float
-    hashRate: float
-    status: str  # "active" | "idle" | "error"
+    temp: Optional[float] = None
+    utilization: Optional[float] = None
+    memUsed: Optional[float] = None
+    memTotal: Optional[float] = None   # QUERIED, never hardcoded
+    power: Optional[float] = None
+    hashRate: Optional[float] = None
+    status: str  # "active" | "idle" | "unavailable"
 
 
 class FPGANodeResponse(BaseModel):
     id: int
     name: str
-    voltage: float
-    xrtStatus: str  # "connected" | "disconnected" | "error"
-    dmaRate: float
-    hashRate: float
-    temp: float
-    status: str  # "active" | "idle" | "error"
+    voltage: Optional[float] = None
+    xrtStatus: str  # "connected" | "disconnected" | "unavailable"
+    dmaRate: Optional[float] = None
+    hashRate: Optional[float] = None
+    temp: Optional[float] = None
+    status: str  # "active" | "idle" | "unavailable"
 
 
 class HardwareStateResponse(BaseModel):
@@ -134,22 +134,22 @@ class HardwareStateResponse(BaseModel):
 
 
 class WalletInfoResponse(BaseModel):
-    address: str
-    balance: float
-    pendingRewards: float
-    totalMined: float
-    lastPayout: str
+    address: Optional[str] = None      # None if config not loaded
+    balance: Optional[float] = None    # None until blockchain query wired
+    pendingRewards: Optional[float] = None
+    totalMined: Optional[float] = None
+    lastPayout: Optional[str] = None
 
 
 class ProfitMetricsResponse(BaseModel):
-    btcPrice: float
-    dailyRevenueBTC: float
-    dailyRevenueUSD: float
-    powerCostUSD: float
-    netProfitUSD: float
-    hashRate: float
-    networkDifficulty: float
-    networkShare: float
+    btcPrice: Optional[float] = None            # None until price feed wired
+    dailyRevenueBTC: Optional[float] = None
+    dailyRevenueUSD: Optional[float] = None
+    powerCostUSD: Optional[float] = None
+    netProfitUSD: Optional[float] = None
+    hashRate: Optional[float] = None
+    networkDifficulty: Optional[float] = None
+    networkShare: Optional[float] = None
 
 
 class MiningStatsResponse(BaseModel):
@@ -158,7 +158,7 @@ class MiningStatsResponse(BaseModel):
     uptime: int
     currentPhase: str
     stratumConnected: bool
-    lastBlockTime: str
+    lastBlockTime: Optional[str] = None
 
 
 class EntropySnapshotResponse(BaseModel):

@@ -1,6 +1,6 @@
 "use client";
 
-import { useSimulation } from "@/hooks/useSimulation";
+import { useTelemetry } from "@/hooks/useTelemetry";
 import Header from "@/components/Header";
 import CollapseDynamics from "@/components/CollapseDynamics";
 import HardwareMatrix from "@/components/HardwareMatrix";
@@ -9,7 +9,7 @@ import LiveTerminal from "@/components/LiveTerminal";
 import HeuristicInjector from "@/components/HeuristicInjector";
 
 export default function Dashboard() {
-  const { entropy, hardware, profit, wallet, mining, terminal, connectionLost } = useSimulation();
+  const { entropy, hardware, profit, wallet, mining, terminal, connectionLost } = useTelemetry();
 
   if (!hardware) {
     return (
@@ -33,17 +33,17 @@ export default function Dashboard() {
     uptime: 0,
     currentPhase: "Awaiting Telemetry",
     stratumConnected: false,
-    lastBlockTime: "N/A",
+    lastBlockTime: null,
   };
   const headerProfit = profit ?? {
-    btcPrice: 0,
-    dailyRevenueBTC: 0,
-    dailyRevenueUSD: 0,
-    powerCostUSD: 0,
-    netProfitUSD: 0,
-    hashRate: 0,
-    networkDifficulty: 0,
-    networkShare: 0,
+    btcPrice: null,
+    dailyRevenueBTC: null,
+    dailyRevenueUSD: null,
+    powerCostUSD: null,
+    netProfitUSD: null,
+    hashRate: null,
+    networkDifficulty: null,
+    networkShare: null,
   };
 
   return (

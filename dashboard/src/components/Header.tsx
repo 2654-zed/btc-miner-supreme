@@ -47,7 +47,7 @@ export default function Header({ mining, profit }: HeaderProps) {
               ΩINTELLIGENCE™ SUPREMACY CORE
             </h1>
             <p className="font-mono text-[10px] text-text-dim tracking-widest">
-              COLLAPSE-THEORETIC MINING ENGINE v4.2.0
+              COLLAPSE-THEORETIC MINING ENGINE
             </p>
           </div>
 
@@ -68,17 +68,17 @@ export default function Header({ mining, profit }: HeaderProps) {
         <div className="flex items-center gap-6">
           <MetricChip
             label="HASHRATE"
-            value={formatHashRate(profit.hashRate)}
+            value={profit.hashRate != null ? formatHashRate(profit.hashRate) : "N/A"}
             color="text-neon-green"
           />
           <MetricChip
             label="NET SHARE"
-            value={`${(profit.networkShare * 100).toFixed(5)}%`}
+            value={profit.networkShare != null ? `${(profit.networkShare * 100).toFixed(5)}%` : "N/A"}
             color="text-neon-cyan"
           />
           <MetricChip
             label="DIFFICULTY"
-            value={formatNumber(profit.networkDifficulty)}
+            value={profit.networkDifficulty != null ? formatNumber(profit.networkDifficulty) : "N/A"}
             color="text-neon-orange"
           />
           <MetricChip

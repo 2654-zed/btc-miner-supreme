@@ -29,7 +29,7 @@ interface StatusPayload {
 }
 
 // ─── Main data hook (network-sourced) ───
-export function useSimulation() {
+export function useTelemetry() {
   const [entropy, setEntropy] = useState<EntropySnapshot[]>([]);
   const [hardware, setHardware] = useState<HardwareState | null>(null);
   const [profit, setProfit] = useState<ProfitMetrics | null>(null);
@@ -81,7 +81,7 @@ export function useSimulation() {
       setConnectionLost(false);
     } catch (err: unknown) {
       if (err instanceof DOMException && err.name === "AbortError") return;
-      console.error("[useSimulation] Connection to Orchestrator lost:", err);
+      console.error("[useTelemetry] Connection to Orchestrator lost");
       setConnectionLost(true);
     }
   }, []);

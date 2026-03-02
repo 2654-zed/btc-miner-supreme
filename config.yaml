@@ -83,12 +83,10 @@ network:
     timeout: 30
     ssl: false
   stratum:
-    pool_url: "stratum+tcp://pool.example.com:3333"
+    pool_url: "${STRATUM_POOL_URL}"   # REQUIRED — set via environment
     worker_name: "miner_supreme.001"
     worker_password: "${STRATUM_PASSWORD}"  # set via environment
-    backup_pools:
-      - "stratum+tcp://backup1.example.com:3333"
-      - "stratum+tcp://backup2.example.com:3333"
+    backup_pools: []                       # Add real backup pools here
   submission:
     fuzzing_enabled: true
     min_delay_ms: 50

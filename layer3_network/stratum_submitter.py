@@ -43,7 +43,7 @@ class StratumJob:
 
 @dataclass
 class StratumConfig:
-    pool_url: str = "stratum+tcp://pool.example.com:3333"
+    pool_url: str = ""  # REQUIRED — must be set explicitly
     worker: str = "miner_supreme.001"
     password: str = ""  # REQUIRED — set via config.yaml or STRATUM_PASSWORD env
     backup_pools: List[str] = field(default_factory=list)
@@ -60,11 +60,16 @@ class StratumSubmitter:
 
     def __init__(
         self,
-        pool_url: str = "stratum+tcp://pool.example.com:3333",
+        pool_url: str = "",
         worker: str = "miner_supreme.001",
         password: str = "",
         backup_pools: Optional[List[str]] = None,
     ) -> None:
+        if not pool_url or "example.com" in pool_url:
+            raise ValueError(
+                f"Invalid pool_url '{pool_url}'. "
+                "Provide a real Stratum pool URL (e.g. stratum+tcp://pool.braiins.com:3333)."
+            )
         self.pool_url = pool_url
         self.worker = worker
         self.password = password

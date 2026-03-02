@@ -72,9 +72,14 @@ function ProfitGauge({ value, max, label }: { value: number; max: number; label:
   );
 }
 
-function obfuscateAddress(addr: string): string {
+function obfuscateAddress(addr: string | null): string {
+  if (!addr) return "NOT CONFIGURED";
   if (addr.length < 12) return addr;
   return addr.slice(0, 8) + "••••••" + addr.slice(-6);
+}
+
+function fmtNullable(v: number | null, fmt: (n: number) => string, fallback = "N/A"): string {
+  return v != null ? fmt(v) : fallback;
 }
 
 export default function ProfitabilityWallet({ profit, wallet }: ProfitabilityWalletProps) {
@@ -83,21 +88,23 @@ export default function ProfitabilityWallet({ profit, wallet }: ProfitabilityWal
     return <TelemetrySkeleton />;
   }
 
+  const btcPrice = profit.btcPrice ?? 0;
+
   return (
     <div className="space-y-3">
       {/* Profit Gauge */}
       <div className="panel">
         <div className="panel-header">⟐ Profitability Engine</div>
         <div className="p-4 flex flex-col items-center">
-          <ProfitGauge value={profit.netProfitUSD} max={100} label="NET USD / DAY" />
+          <ProfitGauge value={profit.netProfitUSD ?? 0} max={100} label="NET USD / DAY" />
 
           <div className="grid grid-cols-2 gap-x-6 gap-y-2 mt-4 w-full">
-            <MetricRow label="BTC Price" value={`$${profit.btcPrice.toLocaleString(undefined, { maximumFractionDigits: 0 })}`} color="text-neon-green" />
-            <MetricRow label="Revenue BTC" value={`${profit.dailyRevenueBTC.toFixed(6)}`} color="text-neon-cyan" />
-            <MetricRow label="Revenue USD" value={`$${profit.dailyRevenueUSD.toFixed(2)}`} color="text-neon-green" />
-            <MetricRow label="Power Cost" value={`$${profit.powerCostUSD.toFixed(2)}`} color="text-neon-orange" />
-            <MetricRow label="Hash Rate" value={`${profit.hashRate.toFixed(2)} EH/s`} color="text-neon-cyan" />
-            <MetricRow label="Net Share" value={`${(profit.networkShare * 100).toFixed(5)}%`} color="text-text-dim" />
+            <MetricRow label="BTC Price" value={fmtNullable(profit.btcPrice, v => `$${v.toLocaleString(undefined, { maximumFractionDigits: 0 })}`)} color="text-neon-green" />
+            <MetricRow label="Revenue BTC" value={fmtNullable(profit.dailyRevenueBTC, v => v.toFixed(6))} color="text-neon-cyan" />
+            <MetricRow label="Revenue USD" value={fmtNullable(profit.dailyRevenueUSD, v => `$${v.toFixed(2)}`)} color="text-neon-green" />
+            <MetricRow label="Power Cost" value={fmtNullable(profit.powerCostUSD, v => `$${v.toFixed(2)}`)} color="text-neon-orange" />
+            <MetricRow label="Hash Rate" value={fmtNullable(profit.hashRate, v => `${v.toFixed(2)} EH/s`)} color="text-neon-cyan" />
+            <MetricRow label="Net Share" value={fmtNullable(profit.networkShare, v => `${(v * 100).toFixed(5)}%`)} color="text-text-dim" />
           </div>
 
           {/* BTC Price Ticker */}
@@ -105,12 +112,12 @@ export default function ProfitabilityWallet({ profit, wallet }: ProfitabilityWal
             <div className="flex items-center justify-between">
               <span className="font-mono text-[9px] text-text-dim tracking-widest">BTC/USD</span>
               <motion.span
-                key={profit.btcPrice.toFixed(0)}
+                key={btcPrice.toFixed(0)}
                 initial={{ opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="font-mono text-lg font-bold text-neon-green text-glow-green"
               >
-                ${profit.btcPrice.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                {profit.btcPrice != null ? `$${profit.btcPrice.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : "AWAITING FEED"}
               </motion.span>
             </div>
           </div>
@@ -132,25 +139,25 @@ export default function ProfitabilityWallet({ profit, wallet }: ProfitabilityWal
           <div className="grid grid-cols-2 gap-3">
             <WalletStat
               label="BALANCE"
-              value={`${wallet.balance.toFixed(5)} BTC`}
-              usd={`$${(wallet.balance * profit.btcPrice).toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+              value={fmtNullable(wallet.balance, v => `${v.toFixed(5)} BTC`)}
+              usd={wallet.balance != null ? `$${(wallet.balance * btcPrice).toLocaleString(undefined, { maximumFractionDigits: 0 })}` : undefined}
               color="text-neon-green"
             />
             <WalletStat
               label="PENDING"
-              value={`${wallet.pendingRewards.toFixed(5)} BTC`}
-              usd={`$${(wallet.pendingRewards * profit.btcPrice).toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+              value={fmtNullable(wallet.pendingRewards, v => `${v.toFixed(5)} BTC`)}
+              usd={wallet.pendingRewards != null ? `$${(wallet.pendingRewards * btcPrice).toLocaleString(undefined, { maximumFractionDigits: 0 })}` : undefined}
               color="text-neon-orange"
             />
             <WalletStat
               label="TOTAL MINED"
-              value={`${wallet.totalMined.toFixed(5)} BTC`}
-              usd={`$${(wallet.totalMined * profit.btcPrice).toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+              value={fmtNullable(wallet.totalMined, v => `${v.toFixed(5)} BTC`)}
+              usd={wallet.totalMined != null ? `$${(wallet.totalMined * btcPrice).toLocaleString(undefined, { maximumFractionDigits: 0 })}` : undefined}
               color="text-neon-cyan"
             />
             <WalletStat
               label="LAST PAYOUT"
-              value={wallet.lastPayout}
+              value={wallet.lastPayout ?? "N/A"}
               color="text-text-dim"
             />
           </div>

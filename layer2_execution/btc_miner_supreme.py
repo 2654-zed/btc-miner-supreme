@@ -183,8 +183,11 @@ class BTCMinerSupreme:
         """Fetch block template from the connector or Stratum."""
         if self.connector is not None:
             return self.connector.get_block_template()
-        logger.warning("No connector configured — using dummy template for testing")
-        return self._dummy_template()
+        raise RuntimeError(
+            "No connector configured. BTCMinerSupreme refuses to mine "
+            "against dummy templates.  Provide a BTCMainnetConnector or "
+            "StratumSubmitter before calling run()."
+        )
 
     @staticmethod
     def _dummy_template() -> BlockTemplate:
