@@ -6,6 +6,7 @@ import CollapseDynamics from "@/components/CollapseDynamics";
 import HardwareMatrix from "@/components/HardwareMatrix";
 import ProfitabilityWallet from "@/components/ProfitabilityWallet";
 import LiveTerminal from "@/components/LiveTerminal";
+import HeuristicInjector from "@/components/HeuristicInjector";
 
 export default function Dashboard() {
   const { entropy, hardware, profit, wallet, mining, terminal } = useSimulation();
@@ -47,9 +48,10 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Right Column - Profitability & Wallet */}
-        <div className="col-span-3 overflow-y-auto pl-1">
+        {/* Right Column - Profitability, Wallet & Heuristic Injector */}
+        <div className="col-span-3 overflow-y-auto pl-1 space-y-3">
           <ProfitabilityWallet profit={profit} wallet={wallet} />
+          <HeuristicInjector />
         </div>
       </div>
     </div>
