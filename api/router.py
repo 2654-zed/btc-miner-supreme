@@ -96,8 +96,37 @@ app.add_middleware(
     allow_headers=["Content-Type", "Accept", "Authorization"],
 )
 
+# ─── Strategy Lab sub-router ────────────────────────────────────────────
+from api.lab_router import lab_router  # noqa: E402
+
+app.include_router(lab_router)
+
 
 # ─── Routes ─────────────────────────────────────────────────────────────
+
+@app.get(
+    "/",
+    summary="API root",
+)
+async def root():
+    """Friendly root endpoint for browser visits."""
+    return {
+        "service": "BTC Miner Supreme API",
+        "status": "online",
+        "docs": "/docs",
+        "openapi": "/openapi.json",
+        "dashboard_status": "/api/v1/status",
+        "orchestrator_status": "/api/v1/orchestrator/status",
+    }
+
+
+@app.get(
+    "/health",
+    summary="Health probe",
+)
+async def health():
+    """Liveness endpoint for quick health checks."""
+    return {"ok": True}
 
 @app.post(
     "/api/v1/inject-heuristic",

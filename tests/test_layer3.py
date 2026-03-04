@@ -23,21 +23,21 @@ from layer3_network.wallet_payout_automation import WalletPayoutAutomation
 
 class TestStratumSubmitter:
     def test_parse_url_tcp(self):
-        s = StratumSubmitter()
+        s = StratumSubmitter(pool_url="stratum+tcp://pool.local:3333")
         host, port, tls = s._parse_url("stratum+tcp://pool.example.com:3333")
         assert host == "pool.example.com"
         assert port == 3333
         assert tls is False
 
     def test_parse_url_ssl(self):
-        s = StratumSubmitter()
+        s = StratumSubmitter(pool_url="stratum+tcp://pool.local:3333")
         host, port, tls = s._parse_url("stratum+ssl://secure.pool.io:4444")
         assert host == "secure.pool.io"
         assert port == 4444
         assert tls is True
 
     def test_no_job_submit_fails(self):
-        s = StratumSubmitter()
+        s = StratumSubmitter(pool_url="stratum+tcp://pool.local:3333")
         # Without a current job and no socket, submit should return False
         result = s.submit(12345)
         assert result is False

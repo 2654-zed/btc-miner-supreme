@@ -131,3 +131,57 @@ body {
   font-family: var(--font-mono) !important;
   font-size: 10px !important;
 }
+
+/* ─── Strategy Lab additions ─────────────────────────────────────── */
+
+.glow-purple {
+  box-shadow: 0 0 15px #a855f730, 0 0 40px #a855f710;
+}
+.text-glow-purple {
+  text-shadow: 0 0 10px #a855f780, 0 0 20px #a855f740;
+}
+
+/* Lift gauge tick animation */
+@keyframes gauge-pulse {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 0.4; }
+}
+.animate-gauge-pulse {
+  animation: gauge-pulse 3s ease-in-out infinite;
+}
+
+/* Chart tooltip dark override (Recharts Legend text) */
+.recharts-legend-item-text {
+  color: #6b7280 !important;
+  font-family: var(--font-mono) !important;
+  font-size: 9px !important;
+}
+
+/* Range slider styling for the lab */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 2px;
+  background: #1a1a3e;
+  outline: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #00d4ff;
+  cursor: pointer;
+  border: 2px solid #0d0d1a;
+}
+input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #00d4ff;
+  cursor: pointer;
+  border: 2px solid #0d0d1a;
+}
+

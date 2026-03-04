@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { motion } from "framer-motion";
 import type { MiningStats, ProfitMetrics } from "@/types";
 
@@ -109,6 +110,14 @@ export default function Header({ mining, profit }: HeaderProps) {
               {mining.currentPhase}
             </motion.div>
           </div>
+
+          {/* Strategy Lab link */}
+          <Link
+            href="/lab"
+            className="border-l border-border-dim pl-4 font-mono text-[10px] text-neon-purple hover:text-neon-purple/80 transition-colors"
+          >
+            ⟐ STRATEGY LAB
+          </Link>
         </div>
       </div>
     </header>

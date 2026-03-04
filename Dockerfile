@@ -64,8 +64,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY --from=builder /usr/local/lib/python3.11 /usr/local/lib/python3.11
 COPY --from=builder /usr/local/bin /usr/local/bin
 
-# Copy XRT libs if they were installed
-COPY --from=builder /opt/xilinx /opt/xilinx 2>/dev/null || true
+# Copy XRT libs if they were installed (safe no-op when absent)
+COPY --from=builder /opt/xilinx /tmp/xilinx
+RUN if [ -d /tmp/xilinx ]; then cp -a /tmp/xilinx /opt/xilinx; fi
 
 WORKDIR /opt/btc-miner
 
